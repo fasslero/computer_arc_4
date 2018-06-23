@@ -78,6 +78,7 @@ prog::prog(int argc, char **argv) {
 
 int prog::main(){
     //read the file and analays the program
+    // todo - calc the arguments (2**block_size etc)
 
     ifstream file(fileString); //input file stream
     string line;
@@ -96,7 +97,6 @@ int prog::main(){
             cout << "Command Format error" << endl;
             return 0;
         }
-        // todo - calc the arguments (2**block_size etc)
         // todo - do algorithm
 
         // DEBUG - remove this line
@@ -113,4 +113,14 @@ int prog::main(){
         // DEBUG - remove this line
         cout << " (dec) " << num << endl;
     }
+
+    //print
+
+    double L1MissRate;
+    double L2MissRate;
+    double avgAccTime;
+
+    printf("L1miss=%.03f ", L1MissRate);
+    printf("L2miss=%.03f ", L2MissRate);
+    printf("AccTimeAvg=%.03f\n", avgAccTime);
 }
