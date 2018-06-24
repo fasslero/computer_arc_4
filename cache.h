@@ -1,5 +1,3 @@
-
-
 //
 // Created by ofer fassler on 19/06/2018.
 //
@@ -57,6 +55,7 @@ public:
 	excecute(int memory_cycles, int block_size, int l1_size, int l1_cycles, int l2_size, int l2_cycles,
 		int write_allocation, int l1_ways, int l2_ways);
 	void handle_line(int line, char op);
+	void get_res(double*, double*, double*);
 
 private:
 	int memory_cycles;
@@ -72,12 +71,12 @@ private:
 	cache l1;
 	cache l2;
 
+	int total_lines;
 	int totalCycles;
 	double missCountL1;
 	double hitCountL1;
 	double missCountL2;
 	double hitCountL2;
-
 
 };
 
