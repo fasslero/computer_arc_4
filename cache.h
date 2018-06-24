@@ -7,10 +7,10 @@
 #include <cstdlib>
 #include <vector>
 #include <math.h>
+using std::vector;
 
 typedef vector<block> blockVec;
 typedef vector<blockVec> vecOfBlockVec;
-
 
 /*memory block class*/
 class block {
