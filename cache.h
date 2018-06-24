@@ -78,9 +78,6 @@ private:
 	double missCountL2;
 	double hitCountL2;
 
-public:
-
-
 
 };
 
