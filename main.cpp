@@ -78,7 +78,6 @@ prog::prog(int argc, char **argv) {
 
 int prog::main(){
     //read the file and analays the program
-    // todo - calc the arguments (2**block_size etc)
 
     ifstream file(fileString); //input file stream
     string line;
@@ -87,6 +86,10 @@ int prog::main(){
         cerr << "File not found" << endl;
         return 0;
     }
+
+	//creating the caches todo : need to put all the arg
+	excecute exe();
+
     while (getline(file, line)) {
 
         stringstream ss(line);
@@ -97,30 +100,28 @@ int prog::main(){
             cout << "Command Format error" << endl;
             return 0;
         }
-        // todo - do algorithm
-
-        // DEBUG - remove this line
-        cout << "operation: " << operation;
+      
+    
 
         string cutAddress = address.substr(2); // Removing the "0x" part of the address
 
-        // DEBUG - remove this line
-        cout << ", address (hex)" << cutAddress;
-
-        unsigned long int num = 0;
-        num = strtoul(cutAddress.c_str(), NULL, 16);
-
-        // DEBUG - remove this line
-        cout << " (dec) " << num << endl;
+        unsigned long int address = 0;
+        address = strtoul(cutAddress.c_str(), NULL, 16);
+		exe.handle_line(address, operation);
+        
     }
-
+    
+    
     //print
 
     double L1MissRate;
     double L2MissRate;
     double avgAccTime;
+    
+    exe.get_results();
 
     printf("L1miss=%.03f ", L1MissRate);
     printf("L2miss=%.03f ", L2MissRate);
     printf("AccTimeAvg=%.03f\n", avgAccTime);
+
 }
