@@ -39,9 +39,13 @@ public:
     void cache_access(int address, char op);
 
     void remove_lRU();
+    block* get_lru(int address);
     int miss_counter;
+    int hit_counter;
     int set_calc(int address);
     int tag_calc(int address);
+    block* search(int address);
+
 };
 
 /*
@@ -66,7 +70,8 @@ cache::cache(int ways, int size, int blocksize, int delaytime) {
 cache::cache(int associative, int cache_size, int block_size, int cache_access_time): cache_size(cache_size),
                                                                         block_size(block_size), blocks_per_way(),
                                                                         cache_access_time(cache_access_time),
-                                                                        time_conter(0), cache_access_counter(0)
+                                                                        time_conter(0), cache_access_counter(0),
+                                                                                      hit_counter(0)
 {
     num_of_ways = (int)pow(2,associative);
     set_size = cache_size - block_size - associative;
@@ -87,34 +92,27 @@ cache::cache(int associative, int cache_size, int block_size, int cache_access_t
 }
 
 void cache::cache_access(int address, char op) {
-    // calc the right set and tag number for this address
-    // todo - write tag and set number functions
-    int address_set = set_calc(address);
-    int address_tag = tag_calc(address);
-    //add one for cache access
-    cache_access_counter++;
+
     //search for the address
+    block* block_in_cache = search(address);
 
-    for (int i = 0; i < num_of_ways; i++) {// check if tag is in way i(in the set)
-        if (address_tag == ways[i][address_set].tag && ways[i][address_set].valid) {
-        // the data is in the cache!
-            //read operation
-            if (op == 'r'){
-                time_conter++;
-                ways[i][address_set].time_counter = time_conter;
-                return;
-            }
-
-                //write operation
-            else{
-                // todo - who to take out?
-            }
+    if (block_in_cache){
+        //the block is in the cache
+        //read operation
+        if (op == 'r'){
+            return;
         }
-        //the data is not in the cache for read op, todo - but what about write?
-        miss_counter++;
+        // write op
+        else{
+            // todo - what to do if we want to write a line that already exist?
+            block_in_cache->dirty = true; //todo - why?
+        }
     }
-
+    else{
+        //the data is not in the cache for read op, todo - but what about write?
+    }
 }
+
 
 int cache::set_calc(int address) {
     int address_block_size_shift = address >> block_size;
@@ -123,5 +121,49 @@ int cache::set_calc(int address) {
 
 int cache::tag_calc(int address) {
     return address >> (block_size + set_size);
+}
+
+/*!
+ * search for the line in the cache, return block pointer if found, else return nullptr
+ */
+block* cache::search(int address) {
+
+    // calc the right set and tag number for this address
+    int address_set = set_calc(address);
+    int address_tag = tag_calc(address);
+    //add one for cache access
+    cache_access_counter++;
+    //search for the address
+
+    for (int i = 0; i < num_of_ways; i++) {// check if tag is in way i(in the set)
+        block block_i = ways[i][address_set];
+        if (address_tag == block_i.tag && block_i.valid) {
+            // the data is in the cache!
+            time_conter++;
+            block_i.time_counter = time_conter;
+            hit_counter++;
+            return block_i*;
+        } else{
+            miss_counter++;
+            return nullptr;
+        }
+    }
+}
+
+block *cache::get_lru(int address) {
+    // calc the right set and tag number for this address
+    int address_set = set_calc(address);
+    block* return_block = nullptr;
+    block block_i;
+    int min = INT_MAX;
+
+    for (int i = 0; i < num_of_ways; i++) {// find the LRU
+        block_i = ways[i][address_set];
+        if (block_i.time_counter < min){
+            min = block_i.time_counter;
+            return_block = block_i*;
+        }
+    }
+    return return_block;
 }
 
