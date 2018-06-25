@@ -2,77 +2,60 @@
 // Created by ofer fassler on 19/06/2018. henry
 //
 
-#include "cache.h"
 #include <vector>
 #include <math.h>
 
 using namespace std;
-typedef vector<block> blockVec;
-typedef vector<blockVec> vecOfBlockVec;
-
 /*memory block class*/
 class block {
 
 public:
-	int time_counter;
-	bool valid;
-	bool dirty; // probably not essential
-	int address;
-	int tag;
-	block() : time_counter(0), valid(false), address(0), dirty(false), tag(0) {};
+    int time_counter;
+    bool valid;
+    bool dirty; // probably not essential
+    int address;
+    int tag;
+    block() : time_counter(0), valid(false), address(0), dirty(false), tag(0) {};
 };
+
+typedef vector<block> blockVec;
+typedef vector<blockVec> vecOfBlockVec;
 
 class cache {
-	int num_of_ways;
-	int cache_size;			// sizes are in log2()
-	int block_size;
-	int blocks_per_way;
-	int set_size;
-	int num_of_sets;
-	int cache_access_time;
-	vecOfBlockVec ways;
-	int time_conter;
-	int cache_access_counter; // for miss rate calc
+    int num_of_ways;
+    int cache_size;			// sizes are in log2()
+    int block_size;
+    int blocks_per_way;
+    int set_size;
+    int num_of_sets;
+    int cache_access_time;
+    vecOfBlockVec ways;
+    int time_conter;
 	bool write_allocate;
+    int cache_access_counter; // for miss rate calc
 
 public:
-	cache(int associative, int cache_size, int block_size, int cache_access_time,bool WA);
-	bool cache_access(int address, char op);
+    cache(int associative, int cache_size, int block_size, int cache_access_time, bool WA);
+    bool cache_access(int address, char op);
 
-	//void remove_lRU();
-	block* get_lru(int address);
-	int miss_counter;
-	int hit_counter;
-	int set_calc(int address);
-	int tag_calc(int address);
-	block* search(int address);
-
+    //void remove_lRU();
+    block* get_lru(int address);
+    int miss_counter;
+    int hit_counter;
+    int set_calc(int address);
+    int tag_calc(int address);
+    block* search(int address);
+	void write(int address);
 };
 
-/*
-
-cache::cache(int ways, int size, int blocksize, int delaytime) {
-Size = size;
-Ways = ways;
-blockSize = blocksize;
-delay = delaytime;
-arrLen = pow(2, (Size - blockSize));	// 2^(size-blocksize)
-arr = new block[arrLen];
-
-if (Ways <= 1)			//one way: need to check only in one index of array
-blocksPerWay = arrLen;		// iterator will only read one cell
-else
-blocksPerWay = arrLen / (pow(2, Ways));		// 2^(size-blocksize-ways)
-}
-
-*/
 
 
-cache::cache(int associative, int cache_size, int block_size, int cache_access_time,bool WA) : cache_size(cache_size),
+
+cache::cache(int associative, int cache_size, int block_size, int cache_access_time,bool _write_allocate) : cache_size(cache_size),
 block_size(block_size), blocks_per_way(),
 cache_access_time(cache_access_time),
 time_conter(0), cache_access_counter(0),
-hit_counter(0), write_allocate(WA)
+hit_counter(0), write_allocate(_write_allocate)
 {
 	num_of_ways = (int)pow(2, associative);
 	set_size = cache_size - block_size - associative;
@@ -107,17 +90,16 @@ bool cache::cache_access(int address, char op) {
 		}
 		// write op
 		else {
-			// todo - what to do if we want to write a line that already exist?
-			block_in_cache->dirty = true; //todo - why?
+			block_in_cache->dirty = true;
 			return true;
 		}
 	}
+	// the block is there
 	else {
+        if (((op == 'w') && write_allocate) || op == 'r')
+            write(address);
 		miss_counter++;
 		return false;
-				 
-		//the data is not in the cache for read op, todo - but what about write? 
-		
 	}
 }
 
@@ -144,19 +126,17 @@ block* cache::search(int address) {
 	//search for the address
 
 	for (int i = 0; i < num_of_ways; i++) {// check if tag is in way i(in the set)
-		block block_i = ways[i][address_set];
-		if (address_tag == block_i.tag && block_i.valid) {
+		block* block_i = &ways[i][address_set];
+		if (address_tag == block_i->tag && block_i->valid) {
 			// the data is in the cache!
 			time_conter++;
-			block_i.time_counter = time_conter;
+			block_i->time_counter = time_conter;
 			hit_counter++;
-			return &block_i;
-		}
-		else {
-			miss_counter++;
-			return nullptr;
+			return block_i;
 		}
 	}
+    miss_counter++;
+    return nullptr;
 }
 
 block *cache::get_lru(int address) {
@@ -166,7 +146,8 @@ block *cache::get_lru(int address) {
 	block block_i;
 	int min = INT_MAX;
 
-	for (int i = 0; i < num_of_ways; i++) {// find the LRU
+	// find the LRU
+	for (int i = 0; i < num_of_ways; i++) {
 		block_i = ways[i][address_set];
 		if (block_i.time_counter < min) {
 			min = block_i.time_counter;
@@ -174,5 +155,16 @@ block *cache::get_lru(int address) {
 		}
 	}
 	return return_block;
+}
+
+void cache::write(int address) {
+    block* write_block = get_lru(address);
+    time_conter++;
+
+    write_block->time_counter = time_conter;
+    write_block->dirty = true;
+    write_block->tag = tag_calc(address);
+    write_block->address = address;
+    write_block->valid = true;
 }
 

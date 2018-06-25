@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include "excecute.cpp"
 
 using std::FILE;
 using std::string;
@@ -26,7 +27,7 @@ class prog{
     string fileString;
 public:
     bool read_args(char **argv);
-    void prog(int argc, char **argv);
+    prog(int argc, char **argv);
     int main();
 
 };
@@ -87,8 +88,8 @@ int prog::main(){
         return 0;
     }
 
-	//creating the caches todo : need to put all the arg
-	excecute exe();
+    excecute exe(memory_cycles_arg, block_size_arg, l1_size_arg, l1_cycles_arg, l2_size_arg,l2_cycles_arg,
+                 write_allocation_arg,l1_ways_arg,l2_ways_arg);
 
     while (getline(file, line)) {
 
@@ -100,28 +101,24 @@ int prog::main(){
             cout << "Command Format error" << endl;
             return 0;
         }
-      
-    
 
         string cutAddress = address.substr(2); // Removing the "0x" part of the address
 
-        unsigned long int address = 0;
-        address = strtoul(cutAddress.c_str(), NULL, 16);
-		exe.handle_line(address, operation);
+        unsigned long int address_int = 0;
+        address_int = strtoul(cutAddress.c_str(), nullptr, 16);
+		exe.handle_line(address_int, operation);
         
     }
-    
-    
-    //print
 
+    //print
     double L1MissRate;
     double L2MissRate;
     double avgAccTime;
     
-    exe.get_results();
+    exe.get_res(&L1MissRate,&L2MissRate,&avgAccTime);
 
     printf("L1miss=%.03f ", L1MissRate);
     printf("L2miss=%.03f ", L2MissRate);
     printf("AccTimeAvg=%.03f\n", avgAccTime);
-
+    return 1;
 }
