@@ -1,17 +1,5 @@
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <cmath>
-#include "cache.cpp"
 
-using std::FILE;
-using std::string;
-using std::cout;
-using std::endl;
-using std::cerr;
-using std::ifstream;
-using std::stringstream;
+#include "cache.cpp"
 
 class excecute {
 public:
@@ -30,7 +18,6 @@ private:
     int l2_cycles;
     int write_allocation;
 
-    //todo - create Cach objects
     cache l1;
     cache l2;
 
@@ -62,9 +49,9 @@ void excecute::handle_line(int line, char op) {
 
 	if (!(l1.cache_access(line, op))) {		//not in L1
 		if (!l2.cache_access(line, op)) {	//not in L2
-			totalCycles += (l1_cycles + l2_cycles + memory_cycles);
+			totalCycles += memory_cycles;
 		}
-		totalCycles += (l1_cycles + l2_cycles);
+		totalCycles += l2_cycles;
 	}
 
 	totalCycles += l1_cycles;
@@ -72,12 +59,12 @@ void excecute::handle_line(int line, char op) {
 }
 
 void excecute::get_res(double* l1missRate, double* l2missRate, double* avg) {
+    missCountL1 = l1.miss_counter;
+    missCountL2 = l2.miss_counter;
 
 	*l1missRate = ((float)missCountL1 / (float)totalCycles);
 	*l2missRate = ((float)missCountL2 / (float)missCountL1);
 	*avg = ((float)totalCycles / (float)total_lines);
-
-
 }
 
 

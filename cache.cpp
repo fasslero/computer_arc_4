@@ -3,9 +3,10 @@
 //
 
 #include <vector>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
+
 /*memory block class*/
 class block {
 
@@ -123,11 +124,12 @@ block* cache::search(int address) {
 	int address_tag = tag_calc(address);
 	//add one for cache access
 	cache_access_counter++;
-	//search for the address
+    block* block_i;
 
+    //search for the address
 	for (int i = 0; i < num_of_ways; i++) {// check if tag is in way i(in the set)
-		block* block_i = &ways[i][address_set];
-		if (address_tag == block_i->tag && block_i->valid) {
+		block_i = &ways[i][address_set];
+		if ((address_tag == block_i->tag) && block_i->valid) {
 			// the data is in the cache!
 			time_conter++;
 			block_i->time_counter = time_conter;
