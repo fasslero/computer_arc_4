@@ -53,18 +53,14 @@ void excecute::handle_line(int line, char op) {
 		}
 		totalCycles += l2_cycles;
 	}
-
 	totalCycles += l1_cycles;
-	
 }
 
 void excecute::get_res(double* l1missRate, double* l2missRate, double* avg) {
     missCountL1 = l1.miss_counter;
     missCountL2 = l2.miss_counter;
 
-	*l1missRate = ((float)missCountL1 / (float)totalCycles);
+	*l1missRate = ((float)missCountL1 / (float)total_lines);
 	*l2missRate = ((float)missCountL2 / (float)missCountL1);
 	*avg = ((float)totalCycles / (float)total_lines);
 }
-
-

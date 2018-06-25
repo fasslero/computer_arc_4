@@ -19,8 +19,8 @@ public:
     block() : time_counter(0), valid(false), address(0), dirty(false), tag(0) {};
 };
 
-typedef vector<block> blockVec;
-typedef vector<blockVec> vecOfBlockVec;
+typedef vector<block*> blockVec;
+typedef vector<blockVec*> vecOfBlockVec;
 
 class cache {
     int num_of_ways;
@@ -50,8 +50,6 @@ public:
 };
 
 
-
-
 cache::cache(int associative, int cache_size, int block_size, int cache_access_time,bool _write_allocate) : cache_size(cache_size),
 block_size(block_size), blocks_per_way(),
 cache_access_time(cache_access_time),
@@ -65,11 +63,11 @@ hit_counter(0), write_allocate(_write_allocate)
 
 	for (int i = 0; i < num_of_ways; ++i) {
 		//create a vector of blocks for each way
-		blockVec way_i;
+		blockVec* way_i = new blockVec();
 		for (int j = 0; j < num_of_sets; ++j) {
 			// create and add a block for each set in each way
-			block block;
-			way_i.push_back(block);
+			block* block_m = new block();
+			way_i->push_back(block_m);
 		}
 		//add the way to the cache
 		ways.push_back(way_i);
@@ -86,7 +84,7 @@ bool cache::cache_access(int address, char op) {
 		//the block is in the cache
 		//read operation
 		if (op == 'r') {
-			hit_counter++;
+			//hit_counter++;
 			return true;
 		}
 		// write op
@@ -99,7 +97,7 @@ bool cache::cache_access(int address, char op) {
 	else {
         if (((op == 'w') && write_allocate) || op == 'r')
             write(address);
-		miss_counter++;
+		//miss_counter++;
 		return false;
 	}
 }
@@ -128,7 +126,7 @@ block* cache::search(int address) {
 
     //search for the address
 	for (int i = 0; i < num_of_ways; i++) {// check if tag is in way i(in the set)
-		block_i = &ways[i][address_set];
+		block_i = ways[i]->at(address_set);
 		if ((address_tag == block_i->tag) && block_i->valid) {
 			// the data is in the cache!
 			time_conter++;
@@ -145,15 +143,15 @@ block *cache::get_lru(int address) {
 	// calc the right set and tag number for this address
 	int address_set = set_calc(address);
 	block* return_block = nullptr;
-	block block_i;
+	block* block_i;
 	int min = INT_MAX;
 
 	// find the LRU
 	for (int i = 0; i < num_of_ways; i++) {
-		block_i = ways[i][address_set];
-		if (block_i.time_counter < min) {
-			min = block_i.time_counter;
-			return_block = &block_i ;
+		block_i = (*ways[i])[address_set];
+		if (block_i->time_counter < min) {
+			min = block_i->time_counter;
+			return_block = block_i ;
 		}
 	}
 	return return_block;
