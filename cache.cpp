@@ -46,7 +46,8 @@ public:
     int set_calc(int address);
     int tag_calc(int address);
     block* search(int address);
-	void write(int address);
+	int write(int address, int valid_or_dirty);
+	void invalidate(int address);
 };
 
 
@@ -79,25 +80,23 @@ bool cache::cache_access(int address, char op) {
 	//search for the address
 	block* block_in_cache = search(address);
 
-
 	if (block_in_cache) {
 		//the block is in the cache
 		//read operation
 		if (op == 'r') {
-			//hit_counter++;
 			return true;
 		}
 		// write op
 		else {
+			time_conter++;
 			block_in_cache->dirty = true;
+			block_in_cache->time_counter = time_conter;
 			return true;
 		}
 	}
 	// the block is there
 	else {
-        if (((op == 'w') && write_allocate) || op == 'r')
-            write(address);
-		//miss_counter++;
+		miss_counter++;
 		return false;
 	}
 }
@@ -121,7 +120,7 @@ block* cache::search(int address) {
 	int address_set = set_calc(address);
 	int address_tag = tag_calc(address);
 	//add one for cache access
-	cache_access_counter++;
+
     block* block_i;
 
     //search for the address
@@ -135,7 +134,7 @@ block* cache::search(int address) {
 			return block_i;
 		}
 	}
-    miss_counter++;
+
     return nullptr;
 }
 
@@ -149,7 +148,12 @@ block *cache::get_lru(int address) {
 	// find the LRU
 	for (int i = 0; i < num_of_ways; i++) {
 		block_i = (*ways[i])[address_set];
-		if (block_i->time_counter < min) {
+		if (!block_i->valid){
+			min = block_i->time_counter;
+			return_block = block_i ;
+			break;
+		}
+		else if (block_i->time_counter < min) {
 			min = block_i->time_counter;
 			return_block = block_i ;
 		}
@@ -157,14 +161,28 @@ block *cache::get_lru(int address) {
 	return return_block;
 }
 
-void cache::write(int address) {
-    block* write_block = get_lru(address);
-    time_conter++;
+int cache::write(int address, int valid_or_dirty) {
+    int address_to_return = -1;
+	block* write_block = get_lru(address);
+
+	// if valid in l1, we need to save it in l2
+	// if dirty in l1, we need to update it in l2
+	if ((write_block->valid && valid_or_dirty == 1) || (write_block->dirty && valid_or_dirty == 2))
+		address_to_return = write_block->address;
+
+	time_conter++;
 
     write_block->time_counter = time_conter;
-    write_block->dirty = true;
+    write_block->dirty = false;
     write_block->tag = tag_calc(address);
     write_block->address = address;
     write_block->valid = true;
+
+	return address_to_return;
 }
 
+void cache::invalidate(int address){
+	block* block_in_cache = search(address);
+	if (block_in_cache)
+		block_in_cache->valid = false;
+}

@@ -46,14 +46,31 @@ excecute::excecute(int memory_cycles, int block_size, int l1_size, int l1_cycles
 
 void excecute::handle_line(int line, char op) {
 	total_lines++;
+    bool write_en = (op == 'w') && write_allocation || op == 'r';
+    int temp_address = NULL;
 
-	if (!(l1.cache_access(line, op))) {		//not in L1
-		if (!l2.cache_access(line, op)) {	//not in L2
-			totalCycles += memory_cycles;
-		}
-		totalCycles += l2_cycles;
-	}
-	totalCycles += l1_cycles;
+    totalCycles += l1_cycles;
+    // search in l1
+    if(!l1.cache_access(line, op)){
+        totalCycles += l2_cycles;
+        // not in l1, search in l2
+        if(!l2.cache_access(line, op)){
+            totalCycles += memory_cycles;
+            // not in l2 - write it to l2 if needed
+            if (write_en){
+                // write it to l2 and get the address of l1 that need to be invalidated
+                temp_address = l2.write(line, 1);
+                if (temp_address != -1)
+                    l1.invalidate(temp_address);
+            }
+        }
+        // write to l1 if needed
+        if (write_en){
+            temp_address = l1.write(line, 2);
+            if (temp_address != -1)
+                l2.cache_access(line, op);
+        }
+    }
 }
 
 void excecute::get_res(double* l1missRate, double* l2missRate, double* avg) {
