@@ -58,7 +58,7 @@ hit_counter(0), write_allocate(_write_allocate)
 {
 	num_of_ways = (int)pow(2, associative);
 	set_size = cache_size - block_size - associative;
-	num_of_sets = (int)pow(2, num_of_sets);
+	num_of_sets = (int)pow(2, set_size);
 	miss_counter = 0;
 
 	for (int i = 0; i < num_of_ways; ++i) {
