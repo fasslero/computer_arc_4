@@ -46,7 +46,7 @@ public:
     int set_calc(int address);
     int tag_calc(int address);
     block* search(int address);
-	int write(int address, int valid_or_dirty);
+	int write(int address, int valid_or_dirty, char op);
 	void invalidate(int address);
 };
 
@@ -90,6 +90,7 @@ bool cache::cache_access(int address, char op) {
 		else {
 			time_conter++;
 			block_in_cache->dirty = true;
+			block_in_cache->address = address;
 			block_in_cache->time_counter = time_conter;
 			return true;
 		}
@@ -161,7 +162,7 @@ block *cache::get_lru(int address) {
 	return return_block;
 }
 
-int cache::write(int address, int valid_or_dirty) {
+int cache::write(int address, int valid_or_dirty, char op) {
     int address_to_return = -1;
 	block* write_block = get_lru(address);
 
@@ -173,7 +174,11 @@ int cache::write(int address, int valid_or_dirty) {
 	time_conter++;
 
     write_block->time_counter = time_conter;
-    write_block->dirty = false;
+    if (op == 'r')
+		write_block->dirty = false;
+	else
+		write_block->dirty = true;
+
     write_block->tag = tag_calc(address);
     write_block->address = address;
     write_block->valid = true;

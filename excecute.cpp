@@ -59,16 +59,16 @@ void excecute::handle_line(int line, char op) {
             // not in l2 - write it to l2 if needed
             if (write_en){
                 // write it to l2 and get the address of l1 that need to be invalidated
-                temp_address = l2.write(line, 1);
+                temp_address = l2.write(line, 1, op);
                 if (temp_address != -1)
                     l1.invalidate(temp_address);
             }
         }
         // write to l1 if needed
         if (write_en){
-            temp_address = l1.write(line, 2);
+            temp_address = l1.write(line, 2, op);
             if (temp_address != -1)
-                l2.cache_access(line, op);
+                l2.cache_access(temp_address, op);
         }
     }
 }
