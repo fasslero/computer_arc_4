@@ -68,7 +68,7 @@ void excecute::handle_line(int line, char op) {
         if (write_en){
             temp_address = l1.write(line, 2, op);
             if (temp_address != -1)
-                l2.cache_access(temp_address, op);
+                l2.touch_block(temp_address, op);
         }
     }
 }

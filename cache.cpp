@@ -48,7 +48,8 @@ public:
     block* search(int address);
 	int write(int address, int valid_or_dirty, char op);
 	void invalidate(int address);
-};
+	bool touch_block(int address, char op);
+	};
 
 
 cache::cache(int associative, int cache_size, int block_size, int cache_access_time,bool _write_allocate) : cache_size(cache_size),
@@ -78,7 +79,7 @@ hit_counter(0), write_allocate(_write_allocate)
 bool cache::cache_access(int address, char op) {
 
 	//search for the address
-	block* block_in_cache = search(address);
+	block *block_in_cache = search(address);
 
 	if (block_in_cache) {
 		//the block is in the cache
@@ -86,7 +87,33 @@ bool cache::cache_access(int address, char op) {
 		if (op == 'r') {
 			return true;
 		}
-		// write op
+			// write op
+		else {
+			time_conter++;
+			block_in_cache->dirty = true;
+			block_in_cache->address = address;
+			block_in_cache->time_counter = time_conter;
+			return true;
+		}
+		// the block is not there
+	} else {
+		miss_counter++;
+		return false;
+	}
+}
+
+bool cache::touch_block(int address, char op){
+
+	//search for the address
+	block *block_in_cache = search(address);
+
+	if (block_in_cache) {
+		//the block is in the cache
+		//read operation
+		if (op == 'r') {
+			return true;
+		}
+			// write op
 		else {
 			time_conter++;
 			block_in_cache->dirty = true;
@@ -95,13 +122,7 @@ bool cache::cache_access(int address, char op) {
 			return true;
 		}
 	}
-	// the block is there
-	else {
-		miss_counter++;
-		return false;
-	}
 }
-
 
 int cache::set_calc(int address) {
 	int address_block_size_shift = address >> block_size;
